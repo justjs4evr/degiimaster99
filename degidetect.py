@@ -8,7 +8,7 @@ from PIL import Image
 import os
 
 # =========================
-# Page Config & Styling
+# Page Config
 # =========================
 st.set_page_config(
     page_title="waiiiiiittttingggmaster99",
@@ -16,35 +16,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-st.markdown(
-    """
-    <style>
-        .main {
-            background-color: #0e1117;
-            color: #fafafa;
-        }
-        h1 {
-            text-align: center;
-            color: #FF4B4B;
-        }
-        .stButton button {
-            width: 100%;
-            border-radius: 12px;
-            background: linear-gradient(90deg, #FF4B4B, #FF944B);
-            color: white;
-            font-size: 18px;
-            padding: 10px;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# =========================
-# Title
-# =========================
-st.title("🎥 waiiiiiittttingggmaster99")
 
 # =========================
 # Session state for encodings
@@ -72,31 +43,25 @@ with st.sidebar:
     st.subheader("📤 Upload Face Image")
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     person_name = st.text_input("Enter a name for this person:")
-    save_btn = st.button("💾 Save Image & Add to Known Faces")
-
-    upload_path = r"C:\Users\justc\mlwpsk"
+    save_btn = st.button("💾 Save & Add to Known Faces")
 
     if save_btn and uploaded_file and person_name.strip() != "":
         # Open and resize image
         image = Image.open(uploaded_file)
         image = image.resize((400, 500))  # Resize to 400x500 px
 
-        # Ensure save directory exists
-        os.makedirs(upload_path, exist_ok=True)
-
-        # Save as <name>.jpg
-        save_filename = os.path.join(upload_path, f"{person_name}.jpg")
+        # Save temporarily inside Streamlit cloud (/tmp/)
+        save_filename = os.path.join("/tmp", f"{person_name}.jpg")
         image.save(save_filename)
 
-        # Re-load image with face_recognition for encoding
+        # Encode face and add to session state
         img_loaded = face_recognition.load_image_file(save_filename)
         encodings = face_recognition.face_encodings(img_loaded)
 
         if len(encodings) > 0:
-            person_encode = encodings[0]
-            st.session_state.known_encodings.append(person_encode)
+            st.session_state.known_encodings.append(encodings[0])
             st.session_state.known_names.append(person_name)
-            st.success(f"✅ {person_name} added and saved to {save_filename}")
+            st.success(f"✅ {person_name} added and saved temporarily.")
         else:
             st.error("⚠️ No face detected in the uploaded image.")
 
@@ -167,7 +132,9 @@ def run_webcam():
 
     webcam.release()
 
-# Start webcam automatically unless stopped
+# =========================
+# Start webcam
+# =========================
 if not stop:
     run_webcam()
 elif restart:
